@@ -13,6 +13,44 @@ from frosting import compose
 from numbers import Number
 from types import FunctionType, LambdaType
 
+def op_relation_test(op1, op2, eltlist, scalarset=None):
+    """
+    Look for a relation of the form op1 == c * op2 for some c in scalarset by 
+    testing whether these agree on all items in eltlist.
+
+    Arguments:
+        op1, op2 (Op): the operators to be tested
+        eltlist (list of Element objects): the elements on which equality is 
+            tested
+        scalarset (list of Number objects): allow for a scalar factor
+
+    Return value:
+        If scalarset is not None:
+            found, c
+            found is bool (was the relation found?)
+            if found == True, c = the scalar factor
+            if found == False, c = None
+        If scalarset is None:
+            found, a boolm(was the relation found?)
+    """
+    if scalarset is None:
+        scalarset2 = [1]
+    else:
+        scalarset2 = scalarset
+    for scalar in scalarset2:
+        if all(op1(f) == op2(f) * scalar for f in eltlist):
+            if scalarset is None:
+                return True
+            else:
+                return True, scalar
+        else:
+            continue
+    if scalarset is None:
+        return False
+    else:
+        return False, None
+
+
 class Op:
     """
     TODO: docstring
@@ -64,3 +102,5 @@ class Op:
         """Act on other with self._f."""
         return self._f(other)
 
+identity = Op(lambda x: x)
+"""Op object for the identity operator."""

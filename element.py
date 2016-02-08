@@ -72,7 +72,7 @@ class Element:
 
     def __init__(self, terms={}, coeff_initializer=int):
         """
-        Initializes self to be an element with terms given by terms.
+        Initialize self to be an element with terms given by terms.
 
         Arguments:
             terms (dict): keys are of type VariableWord, values of any numeric 
@@ -86,11 +86,15 @@ class Element:
         """
         self.terms = defaultdict(coeff_initializer)
         self._coeff_initializer = coeff_initializer
+
+        if isinstance(terms, list) or isinstance(terms, tuple):
+            terms = {x: 1 for x in terms}
+
         if isinstance(terms, dict) or isinstance(terms, defaultdict):
             for x in terms:
                 if isinstance(x, VariableWord):
                     self.terms[x] = terms[x]
-                elif isinstance(x, Variable):
+                elif isinstance(x, Variable) or isinstance(x, str):
                     self.terms[VariableWord(x)] = terms[x]
                 else:
                     raise TypeError
@@ -108,7 +112,7 @@ class Element:
         self._simplify()
 
     def __add__(self, other):
-        """Returns the sum of two elements."""
+        """Return the sum of self and other."""
         if isinstance(other, Element):
             return Element({vw: self[vw] + other[vw] 
                 for vw in set(self.terms).union(other.terms)})
@@ -119,12 +123,23 @@ class Element:
         else:
             return TypeError
 
+    def __radd__(self, other):
+        """Return the sum of other and self."""
+        # the case where other is an Element will never happen, because 
+        # in that case, other.__add__ is called instead
+        if isinstance(other, VariableWord) or isinstance(other, Variable):
+            return self + Element(other)
+        elif isinstance(other, Number):
+            return self + Element(other)
+        else:
+            return TypeError
+
     def __sub__(self, other):
-        """Returns the difference of two elements."""
+        """Return the difference self - other."""
         return self + other * -1
 
     def __mul__(self, other):
-        """Returns the product of two elements."""
+        """Return the product of self and other."""
         if isinstance(other, Element):
             ret = Element()
             for vw1, vw2 in product(self.terms, other.terms):
@@ -138,8 +153,31 @@ class Element:
         else:
             raise TypeError
 
+    def __rmul__(self, other):
+        """Return the product of other and self."""
+        # the case whereother is an Element will never happen, since 
+        # other.__mul__ will be called instead
+        if isinstance(other, VariableWord) or isinstance(other, Variable):
+            return Element(other) * self
+        elif isinstance(other, Number):
+            return Element(other) * self
+        else:
+            raise TypeError
+
+    def __pow__(self, n):
+        """Returns the n-fold product of self, n a positive integer."""
+        if isinstance(n, int):
+            if n > 0:
+                return self * self**(n-1)
+            elif n == 0:
+                return Element(VariableWord())
+            else:
+                raise ValueError
+        else:
+            raise TypeError
+
     def __eq__(self, other):
-        """Returns True or False according to equality."""
+        """Return True or False according to equality."""
         if isinstance(other, Element):
             rhs = other
         elif isinstance(other, VariableWord) or isinstance(other, Variable):
@@ -160,18 +198,13 @@ class Element:
         elif index == 1:
             return self[VariableWord()]
         elif isinstance(index, Element):
-            # being very generous, we'll allow this if index is an Element 
+            # be very generous: we'll allow this if index is an Element 
             # of the form 1 * vw for some VariableWord vw
-            vw = None
-            for key, val in index.terms.iteritems():
-                if val not in [0, 1]:
-                    raise TypeError
-                elif val == 1:
-                    if vw is not None:
-                        raise TypeError
-                    else:
-                        vw = key
-            return self[vw]
+            index_vw = index.as_vw()
+            if index_vw:
+                return self[vw]
+            else:
+                raise TypeError
 
     def __str__(self):
         """Stringifies self."""
@@ -229,13 +262,26 @@ class Element:
         self.terms = newterms
         self._simplify()
 
+    def as_vw(self):
+        """
+        If self is 1*vw for some VariableWord, return a copy of that 
+        VariableWord.  Otherwise, return False.
+        """
+        nonzero_terms = [key for key in self.terms if self.terms[key] != 0]
+        if len(nonzero_terms) != 1:
+            return False
+        elif self.terms[nonzero_terms[0]] != 1:
+            return False
+        else:
+            return nonzero_terms[0]
+
     def copy(self):
         """Returns a copy of self."""
         from copy import deepcopy
         return Element(deepcopy(self.terms), coeff_initializer=self._coeff_initializer)
 
     def _simplify(self):
-        """TODO"""
+        """Apply relations from config.relations to self as much as possible."""
         made_simplification = True
         while made_simplification:
             made_simplification = False

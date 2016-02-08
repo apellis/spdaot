@@ -11,6 +11,7 @@ Classes:
     VariableWord: stands for a word in known variables
 """
 
+from copy import deepcopy
 from . import config
 from .exceptions import VariableNameCollision, UnknownVariableName
 
@@ -67,6 +68,18 @@ class Variable:
         """Return hash of self.name."""
         return hash(self.name)
 
+    def __mul__(self, other):
+        """Return the VariableWord concatenation of self and other."""
+        if isinstance(other, Variable):
+            return VariableWord(self, other)
+        elif isinstance(other, str):
+            return VariableWord(self, Variable(other))
+        elif isinstance(other, VariableWord):
+            # use VariableWord.__rmul__ instead
+            return NotImplemented
+        else:
+            raise TypeError
+
     def _register(self):
         """
         Attempt to register this variable in config.variables.
@@ -121,6 +134,12 @@ class VariableWord:
                 varname = var
             elif isinstance(var, Variable):
                 varname = var.name
+            elif isinstance(var, VariableWord):
+                # be generous: it it's a single variable, then cast
+                if len(var) == 1:
+                    return var[0]
+                else:
+                    raise TypeError
             else:
                 raise TypeError
 
@@ -139,6 +158,15 @@ class VariableWord:
             return VariableWord(*(self._w + other._w))
         elif isinstance(other, Variable):
             return VariableWord(*(self._w + [other.name]))
+        else:
+            raise TypeError
+
+    def __rmul__(self, other):
+        """Concatenate other and self."""
+        if isinstance(other, VariableWord):
+            return VariableWord(*(other._w + self._w))
+        elif isinstance(other, Variable):
+            return VariableWord(*([other.name] + self._w))
         else:
             raise TypeError
 
@@ -165,6 +193,10 @@ class VariableWord:
     def __hash__(self):
         """Return hash of self._tuplify()."""
         return hash(self._tuplify())
+
+    def __len__(self):
+        """Return the number of factors."""
+        return len(self._w)
 
     def _tuplify(self):
         """Return a tuple of strings representing the word."""
