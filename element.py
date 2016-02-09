@@ -246,7 +246,7 @@ class Element:
             else:
                 raise TypeError
 
-    def transform(self, old, new, scalar=1, swap=False, revscalar=None):
+    def transform(self, old, new, scalar=1, swap=False, revscalar=None, no_swap_scalar=1):
         """Change all occurrences of variable old to scalar*new."""
         if swap and revscalar is None:
             revscalar = scalar
@@ -255,10 +255,10 @@ class Element:
             newkey = key.copy()
             if swap:
                 ex1, ex2 = newkey.transform(old, new, swap=swap)
-                newterms[newkey] = self.terms[key] * scalar**ex1 * revscalar**ex2
+                newterms[newkey] = self.terms[key] * scalar**ex1 * revscalar**ex2 * no_swap_scalar**(len(newkey)-ex1-ex2)
             else:
                 ex = newkey.transform(old, new, swap=swap)
-                newterms[newkey] = self.terms[key] * scalar**ex
+                newterms[newkey] = self.terms[key] * scalar**ex * no_swap_scalar(len(newkey)-ex)
         self.terms = newterms
         self._simplify()
 

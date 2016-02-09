@@ -13,8 +13,8 @@ def minus_s(x, i, j=None, sign=1, varletter='x'):
     if j is None:
         j = i + 1
     y = x.copy()
-    y.transform(varletter+str(i), varletter+str(j), scalar=sign, swap=True)
-    return y * -1
+    y.transform(varletter+str(i), varletter+str(j), scalar=sign*-1, swap=True, no_swap_scalar=-1)
+    return y
 
 def sig(x, i, j=None, sign=1, varletter='x'):
     """Simple generator of B_n^+"""
@@ -95,7 +95,6 @@ def _braided_differential_vw(vw, x_values, braiding):
         left = braiding(Element(VariableWord(*vw[:i]))) if i > 0 else Element(1)
         middle = x_values[vw[i]]
         right = Element(VariableWord(*vw[i+1:])) if i < len(vw) - 1 else Element(1)
-        print "**", i, vw, left, middle, right
         ret_terms.append(left * middle * right)
     return sum(ret_terms)
 
