@@ -118,10 +118,13 @@ def braided_differential(elt, x_values, braiding):
     """
     if isinstance(x_values, dict):
         x_values = defaultdict(int, x_values)
+
     if isinstance(elt, Variable) or isinstance(elt, VariableWord):
         return _braided_differential_variable(elt, x_values)
     elif isinstance(elt, str):
         return _braided_differential_variable(Variable(var), x_values)
+    elif isinstance(elt, Number):
+        return 0
     elif isinstance(elt, Element):
         return sum(
             _braided_differential_vw(
@@ -129,17 +132,28 @@ def braided_differential(elt, x_values, braiding):
     else:
         raise TypeError
 
-def minus_Dn_braided_differentials(n, varletter='x'):
+def minus_Dn_braided_differentials(n, varletter='x', isobaric=False):
     """
     Return Op objects for each braided differential for -D_n acting 
     on S_{-1}(V) in the order d_1^+, ..., d_1^-, ...
+
+    If isobaric = True, returns \pm x_i * d_i^\pm in place of d_i^\pm.
     """
+    if isobaric:
+        # i = 0 case is never used, but it makes the formula below look better
+        pre_x = [Element(Variable(varletter + str(i+1))) for i in xrange(n)]
+
     def differential_factory(i, s):
         x_values = defaultdict(int, {varletter+str(i): 1,
             varletter+str(i+1): s})
         braiding = lambda x: minus_s(x, i, sign=s, varletter=varletter)
-        return lambda x: braided_differential(x, x_values, braiding)
+        if isobaric:
+            return lambda x: pre_x[i] * braided_differential(x, x_values, braiding) * s
+        else:
+            return lambda x: braided_differential(x, x_values, braiding)
+
     return tuple(
-        Op(differential_factory(i, 1)) for i in xrange(1, n)) + tuple(
-        Op(differential_factory(i, -1)) for i in xrange(1, n))
+            Op(differential_factory(i, 1)) for i in xrange(1, n)) + tuple(
+            Op(differential_factory(i, -1)) for i in xrange(1, n))
+
 
