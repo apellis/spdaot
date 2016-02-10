@@ -13,12 +13,12 @@ Classes:
 
 from copy import deepcopy
 from . import config
-from .exceptions import VariableNameCollision, UnknownVariableName
+from .exceptions import VariableNameCollision, UnknownVariableName, InvalidVariableName
 
 class Variable:
     """Class for named variables.  TODO: expand"""
 
-    def __init__(self, name, deg=0, register=False):
+    def __init__(self, name, deg=0, register=False, make_inverse=False):
         """
         Initialize name and degree.  If the variable is unknown, register it.  
         If register is set to True, force an attempt to register.  This can 
@@ -27,9 +27,25 @@ class Variable:
         Arguments:
             name (string): name of the new variable
             deg (any type): degree, if applicable
+            make_inverse (bool): if True, registers and initializes self as 
+                the inverse of given name and degree
         """
-        self.name = name        
+        # we require variable names to be alphanumeric strings starting with a 
+        # letter
+        if not isinstance(name, str):
+            raise TypeError
+        elif len(name) == 0 or not name.isalnum():
+            raise InvalidVariableName
+
+        # set name and degree
+        self.name = name
         self.deg = deg
+        if make_inverse:
+            self.name = self._inverse_name()
+            self.deg = self._inverse_deg()
+
+        # register is needed; if a register is forced and a variable name 
+        # collision occurs, raise a VariableNameCollision exception
         try:
             self._register()
         except VariableNameCollision:
@@ -49,11 +65,11 @@ class Variable:
 
     def __str__(self):
         """Stringify self."""
-        return self.name
+        return self.name.replace('@', 'i')
 
     def __repr__(self):
         """Stringify self."""
-        return self.name
+        return self.name.replace('@', 'i')
 
     def __mul__(self, other):
         """Return a VariableWord representing the product of self and other."""
@@ -118,6 +134,40 @@ class Variable:
         else:
             return False
 
+    def _inverse_name(self):
+        """
+        Returns the name of the would-be inverse of self, regardless of 
+        whether or not the inverse is registered.
+        """
+        if self.name[-1] == '@':
+            return self.name[:-1]
+        else:
+            return self.name + '@'
+
+    def _inverse_deg(self):
+        """
+        Returns the degree of the would-be inverse of self, regardless of 
+        whether or not the inverse is registered.
+        """        
+        return self.deg * -1
+
+    def inverse(self):
+        """
+        If self has a registered inverse, returns a Variable object for the 
+        inverse.  Otherwise, returns None.
+        """
+        if self._is_inverse():
+            return config.variables[self.name[:-1]]
+        else:
+            try:
+                return config.variables[self._inverse_name()]
+            except KeyError:
+                return None
+
+    def _is_inverse(self):
+        """Return True or False accoring to whether or not self is an inverse."""
+        return self.name[-1] == '@'
+
 class VariableWord:
     """Class for a word in known variables.  TODO: expand"""
 
@@ -180,11 +230,13 @@ class VariableWord:
 
     def __str__(self):
         """Stringify self in monomial style."""
-        if len(self._w) > 0:
-            return config.print_options['mulsep'].join(self._w)
+        if config.print_options['use_exponents']:
+            pass #TODO
         else:
-            return "1"
-        # TODO: support for exponents
+            if len(self._w) > 0:
+                return config.print_options['mulsep'].join(self._w).replace('@', 'i')
+            else:
+                return "1"
 
     def __repr__(self):
         """Stringify self in list style."""

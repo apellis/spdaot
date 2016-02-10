@@ -16,3 +16,6 @@ class VariableNameCollision(Exception):
 
 class UnknownVariableName(Exception):
     pass
+
+class InvalidVariableName(Exception):
+    pass

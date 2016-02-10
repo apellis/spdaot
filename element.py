@@ -22,27 +22,57 @@ def make_poly_family(*args, **kwargs):
 
     Arguments:
         args: a list of strings or Variable objects
+
+    Keyword arguments:
         commute: a number or a callable which returns a number when called 
-            with two arugments, each one of the elements of args
+            with two arugments, each one of the elements of args.
+        inverses (bool): if True, also creates inverses for each variable.  
+            'f' inverse will have the name 'fi'.  inverses are given 
+            commutation relations so as to match: if x2 x1 = c x1 x2, then 
+            x2i x1i = c x1i x2i
 
     When commute is a function, commute(v1, v2) is the scalar c such that
-    v2 * v1 = c * v1 * v2, where v1 precedes v2 in args.
+    v2 * v1 = c * v1 * v2, where v1 precedes v2 in args.  If commute is a 
+    callable and inverses = True, the commutation relation for inverses is 
+    inferred from that of the original variables; the argument to commute, 
+    does not have to know about inverses.
 
     Return value:
         a tuple of Elements representing 1*v for v in args, in order
     """
     variables = tuple(Variable(x) for x in args)
+    inverse_variables = tuple(Variable(x, make_inverse=True) for x in args) if kwargs['inverses'] == True else tuple()
+
+    # make com a callable with two arguments
     if 'commute' not in kwargs:
         com = lambda x, y: 1
     elif isinstance(kwargs['commute'], Number):
         com = lambda x, y: kwargs['commute']
     else:
         com = kwargs['commute']
+
+    # relations of the form x * xi = 1 take precedence
+    if kwargs['inverses']:
+        for i in xrange(len(args)):
+            x = variables[i]
+            xi = inverse_variables[i]
+            config.relations[x*xi] = Relation(x*xi, (1, VariableWord()))
+            config.relations[xi*x] = Relation(xi*x, (1, VariableWord()))
+
+    # commutation relations
     for i in xrange(len(args)):
         for j in xrange(i+1, len(args)):
             x, y = variables[i], variables[j]
             config.relations[y*x] = Relation(y*x, (com(x, y), x*y))
-    return tuple(Element(v) for v in variables)
+            if kwargs['inverses']:
+                xi, yi = inverse_variables[i], inverse_variables[j]
+                config.relations[yi*xi] = Relation(yi*xi, (com(x, y), xi*yi))
+                cinv = 1./com(x, y)
+                cinv = int(cinv) if cinv.is_integer() else cinv
+                config.relations[y*xi] = Relation(y*xi, (cinv, xi*y))
+                config.relations[yi*x] = Relation(yi*x, (cinv, x*yi))
+
+    return tuple(Element(v) for v in variables) + tuple(Element(v) for v in inverse_variables)
 
 def add_central_variable(newvar):
     """
@@ -225,6 +255,11 @@ class Element:
                     for key in self.terms])
         else:
             return '0'
+
+    def __iter__(self):
+        """Iterate over VariableWord objects that are terms of self."""
+        for vw in self.terms:
+            yield vw
 
     def _add_terms(self, *args):
         """

@@ -6,7 +6,12 @@ Overview:
 """
 
 variables = {}
-"""dict: keys are strings (variables names), values are Variable objects"""
+"""
+dict: keys are strings (variables names), values are Variable objects
+
+Never use a variable name ending in the character 'i', since it is used to 
+denote inverses.
+"""
 
 relations = {}
 """
@@ -14,7 +19,7 @@ dict: keys are of type VariableWord (left-hand side), values are of type
 Relation (the whole relation)
 """
 
-print_options = {'addsep': ' + ', 'mulsep': '', 'use_exponents': True}
+print_options = {'addsep': ' + ', 'mulsep': '', 'use_exponents': False}
 """
 dict
 
