@@ -12,6 +12,7 @@ Classes:
 """
 
 from copy import deepcopy
+from itertools import groupby
 from . import config
 from .exceptions import VariableNameCollision, UnknownVariableName, InvalidVariableName
 
@@ -231,7 +232,8 @@ class VariableWord:
     def __str__(self):
         """Stringify self in monomial style."""
         if config.print_options['use_exponents']:
-            pass #TODO
+            exp_form = (x + '^' + str(len(list(y))) for (x, y) in groupby(self._w))
+            return config.print_options['mulsep'].join(exp_form).replace('@', 'i')
         else:
             if len(self._w) > 0:
                 return config.print_options['mulsep'].join(self._w).replace('@', 'i')

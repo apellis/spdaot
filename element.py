@@ -241,7 +241,7 @@ class Element:
         one = VariableWord()
         if len(self.terms.keys()) > 0:
             return config.print_options['addsep'].join(
-                [str(self[key]) + (str(key) if key != one else '') 
+                [str(self[key]) + config.print_options['mulsep'] + (str(key) if key != one else '') 
                     for key in self.terms])
         else:
             return '0'

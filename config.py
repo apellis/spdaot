@@ -19,7 +19,7 @@ dict: keys are of type VariableWord (left-hand side), values are of type
 Relation (the whole relation)
 """
 
-print_options = {'addsep': ' + ', 'mulsep': '', 'use_exponents': False}
+print_options = {'addsep': ' + ', 'mulsep': ' ', 'use_exponents': True}
 """
 dict
 
