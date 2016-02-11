@@ -23,13 +23,14 @@ Here's a quick summary, before I get around to writing proper documentation.
 * class Op, which allows for quickly computing  algebra and group actions
 * some functional programming tools and decorators
 * `D_n^-`, `B_n^+` group actions on `S_{-1}(V)`; braided differentials; isobaric braided differentials
+* relation finder
 
 ##### Things to do, sooner:
 
 * testing suite
 * fill out documentation
-* automatic relation finder (in a representation)
 * `S_n` group action on `S_1(V)`
+* add better type checking and error protection to class Op, especially in Op.__init__()
 
 ##### Things to do, later:
 

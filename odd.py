@@ -12,16 +12,30 @@ def minus_s(x, i, j=None, sign=1, varletter='x'):
     """Simple generator of -D_n"""
     if j is None:
         j = i + 1
+    def scale_func(s):
+        if s == varletter + str(i) or s == varletter + str(j):
+            return -1 * sign
+        elif s[0] == varletter and s[1:].isdigit():
+            return -1
+        else:
+            return 1
     y = x.copy()
-    y.transform(varletter+str(i), varletter+str(j), scalar=sign*-1, swap=True, no_swap_scalar=-1)
+    y.transform(varletter+str(i), varletter+str(j), scale_func=scale_func, swap=True)
     return y
 
 def sig(x, i, j=None, sign=1, varletter='x'):
     """Simple generator of B_n^+"""
     if j is None:
         j = i + 1
+    def scale_func(s):
+        if s == varletter + str(i):
+            return sign
+        elif s == varletter + str(j):
+            return -1 * sign
+        else:
+            return 1
     y = x.copy()
-    y.transform(varletter+str(i), varletter+str(j), scalar=sign, swap=True, revscalar=sign*-1)
+    y.transform(varletter+str(i), varletter+str(j), scale_func=scale_func, swap=True)
     return y
 
 def minus_Dn_generators(n, varletter='x'):
@@ -39,7 +53,7 @@ def minus_Dn_generators(n, varletter='x'):
             return lambda f: minus_s(f, i, sign=1, varletter=varletter)
         elif s == -1:
             return lambda f: minus_s(f, i, sign=-1, varletter=varletter)
-    return tuple(Op(generator_factory(i, 1)) for i in xrange(1, n)) + tuple(Op(generator_factory(i, -1)) for i in xrange(1, n))
+    return tuple(Op(generator_factory(i, 1), name='-s_'+str(i)+'^+') for i in xrange(1, n)) + tuple(Op(generator_factory(i, -1), name='-s_'+str(i)+'^-') for i in xrange(1, n))
 
 def Bn_plus_generators(n, varletter='x'):
     """
@@ -57,8 +71,8 @@ def Bn_plus_generators(n, varletter='x'):
         elif s == -1:
             return lambda f: sig(f, i, sign=-1, varletter=varletter)
     return tuple(
-        Op(generator_factory(i, 1)) for i in xrange(1, n)) + tuple(
-        Op(generator_factory(i, -1)) for i in xrange(1, n))
+        Op(generator_factory(i, 1), name='sigma_'+str(i)+'^+') for i in xrange(1, n)) + tuple(
+        Op(generator_factory(i, -1), name='sigma_'+str(i)+'^-') for i in xrange(1, n))
 
 def _braided_differential_variable(var, x_values):
     """Compute a braided differential on a single Variable, return result."""
@@ -152,8 +166,25 @@ def minus_Dn_braided_differentials(n, varletter='x', isobaric=False):
         else:
             return lambda x: braided_differential(x, x_values, braiding)
 
+    dee = 'D' if isobaric else 'd'
+
     return tuple(
-            Op(differential_factory(i, 1)) for i in xrange(1, n)) + tuple(
-            Op(differential_factory(i, -1)) for i in xrange(1, n))
+            Op(differential_factory(i, 1), name=dee+'_'+str(i)+'^+') for i in xrange(1, n)) + tuple(
+            Op(differential_factory(i, -1), name=dee+'_'+str(i)+'^-') for i in xrange(1, n))
 
+def minus_Dn_hecke_generators(n, varletter='x', qletter='q'):
+    """
+    Return Op objects for generators of the Hecke deformation of the isobaric 
+    braided differentials for -D_n.
+    """
+    isobarics = minus_Dn_braided_differentials(
+        n, varletter=varletter, isobaric=True)
+    sigmas = Bn_plus_generators(n, varletter=varletter)
 
+    ret = []
+    for i in xrange(1, n):
+        ret.append((Element(1)-Element(qletter))*isobarics[i-1]+sigmas[n-1+i-1])
+    for i in xrange(1, n):
+        ret.append((Element(1)-Element(qletter))*isobarics[n-1+i-1]+sigmas[i-1])
+
+    return ret

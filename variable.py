@@ -13,8 +13,24 @@ Classes:
 
 from copy import deepcopy
 from itertools import groupby
+from collections import defaultdict
 from . import config
 from .exceptions import VariableNameCollision, UnknownVariableName, InvalidVariableName
+from .frosting import prod
+
+def _exp_str(string, exponent):
+    """
+    Return a string representing string rasied to the power exponent.
+    """
+    if isinstance(string, str) and isinstance(exponent, int):
+        if exponent < 1:
+            raise ValueError
+        elif exponent == 1:
+            return string
+        else:
+            return string + '^' + str(exponent)
+    else:
+        raise TypeError
 
 class Variable:
     """Class for named variables.  TODO: expand"""
@@ -79,7 +95,7 @@ class Variable:
         elif isinstance(other, VariableWord):
             return VariableWord(self, *(other._w))
         else:
-            return TypeError
+            return NotImplemented
 
     def __hash__(self):
         """Return hash of self.name."""
@@ -95,7 +111,7 @@ class Variable:
             # use VariableWord.__rmul__ instead
             return NotImplemented
         else:
-            raise TypeError
+            return NotImplemented
 
     def _register(self):
         """
@@ -210,7 +226,7 @@ class VariableWord:
         elif isinstance(other, Variable):
             return VariableWord(*(self._w + [other.name]))
         else:
-            raise TypeError
+            return NotImplemented
 
     def __rmul__(self, other):
         """Concatenate other and self."""
@@ -219,7 +235,7 @@ class VariableWord:
         elif isinstance(other, Variable):
             return VariableWord(*([other.name] + self._w))
         else:
-            raise TypeError
+            return NotImplemented
 
     def __eq__(self, other):
         """Return True or False according to equality or not."""
@@ -232,7 +248,7 @@ class VariableWord:
     def __str__(self):
         """Stringify self in monomial style."""
         if config.print_options['use_exponents']:
-            exp_form = (x + '^' + str(len(list(y))) for (x, y) in groupby(self._w))
+            exp_form = (_exp_str(x, len(list(y))) for (x, y) in groupby(self._w))
             return config.print_options['mulsep'].join(exp_form).replace('@', 'i')
         else:
             if len(self._w) > 0:
@@ -263,15 +279,8 @@ class VariableWord:
 
         Arguments:
             old, new (str or Variable)
-
-        Return value:
-            if swap:
-                n1, n2 = number of changes made in the forward and reverse directions
-            if not swap:
-                n = number of changes made
         """
-        count = 0
-        count_rev = 0
+        num_encountered = defaultdict(int)
         if isinstance(old, Variable):
             old = old.name
         if isinstance(new, Variable):
@@ -279,16 +288,10 @@ class VariableWord:
         for i in xrange(len(self._w)):
             if self._w[i] == old:
                 self._w[i] = new
-                count += 1
             elif self._w[i] == new and swap:
                 self._w[i] = old
-                count_rev += 1
             else:
                 continue
-        if swap:
-            return count, count_rev
-        else:
-            return count
 
     def copy(self):
         """Return a copy of self."""
@@ -313,3 +316,11 @@ class VariableWord:
                     return self._w[:i], self._w[i:i+len(subword)], self._w[i+len(subword):]
         return None, None, None
 
+    def scale_by_factors(self, scalar_func):
+        """
+        Return the product of scalar_func(v) for each v in self.
+
+        Argument:
+            scalar_func (callable): takes an argument of a str, returns a Number
+        """
+        return prod(*[scalar_func(v) for v in self])

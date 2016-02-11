@@ -151,7 +151,7 @@ class Element:
         elif isinstance(other, Number):
             return self + Element(other)
         else:
-            return TypeError
+            return NotImplemented
 
     def __radd__(self, other):
         """Return the sum of other and self."""
@@ -162,7 +162,15 @@ class Element:
         elif isinstance(other, Number):
             return self + Element(other)
         else:
-            return TypeError
+            return NotImplemented
+
+    def __sub__(self, other):
+        """Return self - other."""
+        return self + -1 * other
+
+    def __rsub__(self, other):
+        """Return other - self."""
+        return other + -1 * self
 
     def __sub__(self, other):
         """Return the difference self - other."""
@@ -181,7 +189,7 @@ class Element:
         elif isinstance(other, Number):
             return self * Element(other)
         else:
-            raise TypeError
+            return NotImplemented
 
     def __rmul__(self, other):
         """Return the product of other and self."""
@@ -192,7 +200,7 @@ class Element:
         elif isinstance(other, Number):
             return Element(other) * self
         else:
-            raise TypeError
+            return NotImplemented
 
     def __pow__(self, n):
         """Returns the n-fold product of self, n a positive integer."""
@@ -202,9 +210,9 @@ class Element:
             elif n == 0:
                 return Element(VariableWord())
             else:
-                raise ValueError
+                return NotImplemented
         else:
-            raise TypeError
+            return NotImplemented
 
     def __eq__(self, other):
         """Return True or False according to equality."""
@@ -215,7 +223,7 @@ class Element:
         elif isinstance(other, Number):
             rhs = Element(other)
         else:
-            raise TypeError
+            return NotImplemented
         words = set(self.terms).union(rhs.terms)
         return all(self[x] == rhs[x] for x in words)
 
@@ -234,7 +242,7 @@ class Element:
             if index_vw:
                 return self[vw]
             else:
-                raise TypeError
+                return NotImplemented
 
     def __str__(self):
         """Stringifies self."""
@@ -261,6 +269,10 @@ class Element:
         for vw in self.terms:
             yield vw
 
+    def __neg__(self):
+        """Return -1 * self."""
+        return self * -1
+
     def _add_terms(self, *args):
         """
         Adds a list of terms to self.
@@ -281,19 +293,14 @@ class Element:
             else:
                 raise TypeError
 
-    def transform(self, old, new, scalar=1, swap=False, revscalar=None, no_swap_scalar=1):
+    def transform(self, old, new, scale_func=lambda x: 1, swap=False):
         """Change all occurrences of variable old to scalar*new."""
-        if swap and revscalar is None:
-            revscalar = scalar
         newterms = defaultdict(self._coeff_initializer)
         for key in self.terms:
+            scale_factor = key.scale_by_factors(scale_func)
             newkey = key.copy()
-            if swap:
-                ex1, ex2 = newkey.transform(old, new, swap=swap)
-                newterms[newkey] = self.terms[key] * scalar**ex1 * revscalar**ex2 * no_swap_scalar**(len(newkey)-ex1-ex2)
-            else:
-                ex = newkey.transform(old, new, swap=swap)
-                newterms[newkey] = self.terms[key] * scalar**ex * no_swap_scalar(len(newkey)-ex)
+            newkey.transform(old, new, swap=swap)
+            newterms[newkey] = self.terms[key] * scale_factor
         self.terms = newterms
         self._simplify()
 

@@ -18,3 +18,5 @@ from .variable import Variable, VariableWord
 from .relation import Relation
 from .op import Op
 from .element import Element, make_poly_family, add_central_variable
+from .tools import relation_finder
+

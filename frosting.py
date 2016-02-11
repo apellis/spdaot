@@ -21,9 +21,7 @@ Functions:
         a function.
 """
 
-
 from functools import update_wrapper
-
 
 def decorator(dec):
     """Decorator: update wrapper for decorated function automatically."""
@@ -32,12 +30,10 @@ def decorator(dec):
 # make decorator a decorator
 decorator = decorator(decorator)
 
-
 @decorator
 def disabled(func):
     """Decorator: do nothing.  Use this to enable/disable other decorators."""
     return func
-
 
 @decorator
 def right_associative(func):
@@ -51,7 +47,6 @@ def right_associative(func):
         return x if not args else func(x, ra_func(*args))
     return ra_func
 
-
 @decorator
 def left_associative(func):
     """
@@ -63,7 +58,6 @@ def left_associative(func):
     def la_func(x, *args):
         return x if not args else func(la_func(x, *args[:-1]), args[-1])
     return la_func
-
 
 @decorator
 def memo(func):
@@ -86,7 +80,6 @@ def memo(func):
             return func(args)
     return _func
 
-
 @decorator
 def trace(func):
     """Decorator: modify a function to also print its recursion trace."""
@@ -104,8 +97,12 @@ def trace(func):
     trace.level = 0
     return _func
 
-
 @left_associative
 def compose(func1, func2):
     """Compose the argument functions."""
     return lambda x: func1(func2(x))
+
+@left_associative
+def prod(x, y):
+    """Return the product of x and y."""
+    return x * y
