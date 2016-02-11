@@ -94,7 +94,7 @@ def div_geometric(func1, func2, degree):
 
     return ret
 
-def relation_finder(terms, eltlist=None, scalarset=[0, 1], normalize=False):
+def relation_finder(terms, eltlist=None, scalarset=[0, 1], normalize=False, verbose=False):
     """
     Look for a relation among terms and report all found.  This function 
     can be called on an iterable whose entries are either all of class 
@@ -125,13 +125,19 @@ def relation_finder(terms, eltlist=None, scalarset=[0, 1], normalize=False):
     """
     ret = []
     zero = Element(0)
+    num_funcs = len(scalarset) ** len(terms)
 
     if all(isinstance(term, Op) for term in terms):
         if eltlist is not None and all(isinstance(elt, Element) for elt in eltlist):
             # input is OK.  do a relation search using class Element
+            found_count, total_count = 0, 0
             for scalardict in finite_set_exponential(scalarset, range(len(terms))):
+                if verbose:
+                    print "trying potential relation {} of {}, found {} for far...".format(total_count, num_funcs, found_count)
+                    total_count += 1
                 if all(sum(scalardict[key] * terms[key](elt) for key in scalardict) == zero for elt in eltlist) and not all(scalardict[key] == 0 for key in scalardict):
                     ret.append([(terms[key], scalardict[key]) for key in scalardict if scalardict[key] != 0])                
+                    found_count += 1
             return ret
         else:
             raise Exception("To call relation_finder() with Op terms, \
@@ -140,9 +146,14 @@ def relation_finder(terms, eltlist=None, scalarset=[0, 1], normalize=False):
     elif all(isinstance(term, Element) for term in terms):
         if eltlist is None:
             # input is OK.  do a relation search using class Op
+            found_count, total_count = 0, 0
             for scalardict in finite_set_exponential(scalarset, range(len(terms))):
+                if verbose:
+                    print "trying potential relation {} of {}, found {} for far...".format(total_count, num_funcs, found_count)
+                    total_count += 1
                 if sum(scalardict[key] * terms[key] for key in scalardict) == zero and not all(scalardict[key] == 0 for key in scalardict):
                     ret.append([(terms[key], scalardict[key]) for key in scalardict if scalardict[key] != 0])
+                    found_count += 1
             return ret
         else:
             raise Exception("When calling relation_finder() with Element \
