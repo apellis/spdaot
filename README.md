@@ -30,7 +30,7 @@ Here's a quick summary, before I get around to writing proper documentation.
 * testing suite
 * fill out documentation
 * `S_n` group action on `S_1(V)`
-* add better type checking and error protection to class Op, especially in Op.__init__()
+* add better type checking and error protection to class Op, especially in Op.\_\_init\_\_()
 
 ##### Things to do, later:
 
