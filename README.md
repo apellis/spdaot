@@ -19,7 +19,7 @@ Here's a quick summary, before I get around to writing proper documentation.
 
 ##### Things already implemented:
 
-* base code for Variable, VariableWord, Relation, Element classes, which handle free algebra modulo relations; wrapper for quickly creating `q`-commuting variables; inverses
+* base code for Variable, VariableWord, Relation, Element classes, which handle free algebra modulo relations; wrapper for quickly creating $$q$$-commuting variables; inverses
 * class Op, which allows for quickly computing  algebra and group actions
 * some functional programming tools and decorators
 * `D_n^-`, `B_n^+` group actions on `S_{-1}(V)`; braided differentials; isobaric braided differentials
