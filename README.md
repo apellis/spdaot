@@ -18,10 +18,8 @@ See SPECIFICATION.md for documentation.
 ##### Things already implemented:
 
 * class `Op`, which allows for quickly computing  algebra and group actions
-=======
 * base code for Variable, VariableWord, Relation, Element classes, which handle free algebra modulo relations; wrapper for quickly creating q-commuting variables; inverses
 * class Op, which allows for quickly computing  algebra and group actions
->>>>>>> 2248c0ecc1b800f1b82861cface78a83e392f53c
 * some functional programming tools and decorators
 * `D_n^-`, `B_n^+` group actions on `S_{-1}(V)`; braided differentials; isobaric braided differentials
 * exact scalar relation finder
