@@ -1,17 +1,17 @@
-"""
-spdaot.op
+"""spdaot.op
 
 Overview:
     TODO
 
 Classes:
-    Op: wrapper class for functions considered as elements of an algebra or 
+    Op: wrapper class for functions considered as elements of an algebra or
         group equipped with an action
 """
 
-from frosting import compose
 from numbers import Number
 from types import FunctionType, LambdaType
+from .frosting import compose
+
 
 class Op:
     """
@@ -30,8 +30,8 @@ class Op:
         """
         Attempt to compose or multiply depending on context.
 
-        If other is an Op or a function, returns the appropriate 
-        composition.  Otherwise, tries to pointwise multiply if 
+        If other is an Op or a function, returns the appropriate
+        composition.  Otherwise, tries to pointwise multiply if
         possible.
         """
         if isinstance(other, Op):
@@ -39,7 +39,7 @@ class Op:
         elif isinstance(other, FunctionType) or isinstance(other, LambdaType):
             return Op(compose(self._f, other))
         else:
-            try: 
+            try:
                 return Op(lambda x: self._f(x) * other)
             except:
                 return NotImplemented
@@ -48,16 +48,16 @@ class Op:
         """
         Attempt to compose or multiply depending on context.
 
-        If other is an Op or a function, returns the appropriate 
-        composition.  Otherwise, tries to pointwise multiply if 
+        If other is an Op or a function, returns the appropriate
+        composition.  Otherwise, tries to pointwise multiply if
         possible.
         """
-        # the case isinstance(other, Op) will never happen, since in that 
+        # the case isinstance(other, Op) will never happen, since in that
         # case, other.__mul__() will be called instead
         if isinstance(other, FunctionType) or isinstance(other, LambdaType):
             return Op(compose(other, self._f))
         else:
-            try: 
+            try:
                 return Op(lambda x: other * self._f(x))
             except:
                 return NotImplemented
@@ -66,8 +66,8 @@ class Op:
         """
         Attempt to add two operators.
 
-        If other is an Op or a function, returns the appropriate 
-        pointwise sum.  If other is a Number, interprets other as a constant 
+        If other is an Op or a function, returns the appropriate
+        pointwise sum.  If other is a Number, interprets other as a constant
         function and does the same.
         """
         if isinstance(other, Op):
@@ -78,14 +78,15 @@ class Op:
             try:
                 return Op(lambda x: self._f(x) + other)
             except:
+                assert Number  # silence Flake8 until we implement this TODO
                 return NotImplemented
 
     def __radd__(self, other):
         """
         Attempt to add two operators.
 
-        If other is an Op or a function, returns the appropriate 
-        pointwise sum.  If other is a Number, interprets other as a constant 
+        If other is an Op or a function, returns the appropriate
+        pointwise sum.  If other is a Number, interprets other as a constant
         function and does the same.
         """
         if isinstance(other, Op):
@@ -106,10 +107,6 @@ class Op:
         """Return other - self."""
         return other + -1 * self
 
-    def __sub__(self, other):
-        """Subtact two operators."""
-        return self + other * -1
-
     def __call__(self, other):
         """Act on other with self._f."""
         return self._f(other)
@@ -120,7 +117,7 @@ class Op:
 
     def __repr__(self):
         """Print self.name"""
-        return self.name    
+        return self.name
 
 identity = Op(lambda x: x, name='id')
 """Op object for the identity operator."""

@@ -1,9 +1,8 @@
-"""
-spdaot.variable
+"""spdaot.variable
 
 Overview:
-    Defines the Variable class, which stands for a known variable.  To declare 
-    a variable called 'x' with degree d (d may be of any type), call the 
+    Defines the Variable class, which stands for a known variable.  To declare
+    a variable called 'x' with degree d (d may be of any type), call the
     constructor Variable('x', d).
 
 Classes:
@@ -13,10 +12,11 @@ Classes:
 
 from copy import deepcopy
 from itertools import groupby
-from collections import defaultdict
 from . import config
-from .exceptions import VariableNameCollision, UnknownVariableName, InvalidVariableName
+from .exceptions import VariableNameCollision, UnknownVariableName, \
+    InvalidVariableName
 from .frosting import prod
+
 
 def _exp_str(string, exponent):
     """
@@ -32,22 +32,23 @@ def _exp_str(string, exponent):
     else:
         raise TypeError
 
+
 class Variable:
     """Class for named variables.  TODO: expand"""
 
     def __init__(self, name, deg=0, register=False, make_inverse=False):
         """
-        Initialize name and degree.  If the variable is unknown, register it.  
-        If register is set to True, force an attempt to register.  This can 
+        Initialize name and degree.  If the variable is unknown, register it.
+        If register is set to True, force an attempt to register.  This can
         raise an exception if the variable is already registered.
 
         Arguments:
             name (string): name of the new variable
             deg (any type): degree, if applicable
-            make_inverse (bool): if True, registers and initializes self as 
+            make_inverse (bool): if True, registers and initializes self as
                 the inverse of given name and degree
         """
-        # we require variable names to be alphanumeric strings starting with a 
+        # we require variable names to be alphanumeric strings starting with a
         # letter
         if not isinstance(name, str):
             raise TypeError
@@ -61,7 +62,7 @@ class Variable:
             self.name = self._inverse_name()
             self.deg = self._inverse_deg()
 
-        # register is needed; if a register is forced and a variable name 
+        # register is needed; if a register is forced and a variable name
         # collision occurs, raise a VariableNameCollision exception
         try:
             self._register()
@@ -101,18 +102,6 @@ class Variable:
         """Return hash of self.name."""
         return hash(self.name)
 
-    def __mul__(self, other):
-        """Return the VariableWord concatenation of self and other."""
-        if isinstance(other, Variable):
-            return VariableWord(self, other)
-        elif isinstance(other, str):
-            return VariableWord(self, Variable(other))
-        elif isinstance(other, VariableWord):
-            # use VariableWord.__rmul__ instead
-            return NotImplemented
-        else:
-            return NotImplemented
-
     def _register(self):
         """
         Attempt to register this variable in config.variables.
@@ -129,7 +118,7 @@ class Variable:
 
     def element(self):
         """Return an Element equal to this variable."""
-        pass # TODO
+        pass  # TODO
 
     def transform(self, old, new, swap=False):
         """
@@ -153,7 +142,7 @@ class Variable:
 
     def _inverse_name(self):
         """
-        Returns the name of the would-be inverse of self, regardless of 
+        Returns the name of the would-be inverse of self, regardless of
         whether or not the inverse is registered.
         """
         if self.name[-1] == '@':
@@ -163,14 +152,14 @@ class Variable:
 
     def _inverse_deg(self):
         """
-        Returns the degree of the would-be inverse of self, regardless of 
+        Returns the degree of the would-be inverse of self, regardless of
         whether or not the inverse is registered.
-        """        
+        """
         return self.deg * -1
 
     def inverse(self):
         """
-        If self has a registered inverse, returns a Variable object for the 
+        If self has a registered inverse, returns a Variable object for the
         inverse.  Otherwise, returns None.
         """
         if self._is_inverse():
@@ -182,8 +171,9 @@ class Variable:
                 return None
 
     def _is_inverse(self):
-        """Return True or False accoring to whether or not self is an inverse."""
+        """Return True/False accoring to whether or not self is an inverse."""
         return self.name[-1] == '@'
+
 
 class VariableWord:
     """Class for a word in known variables.  TODO: expand"""
@@ -248,11 +238,14 @@ class VariableWord:
     def __str__(self):
         """Stringify self in monomial style."""
         if config.print_options['use_exponents']:
-            exp_form = (_exp_str(x, len(list(y))) for (x, y) in groupby(self._w))
-            return config.print_options['mulsep'].join(exp_form).replace('@', 'i')
+            exp_form = (_exp_str(x, len(list(y)))
+                        for (x, y) in groupby(self._w))
+            return config.print_options['mulsep']\
+                .join(exp_form).replace('@', 'i')
         else:
             if len(self._w) > 0:
-                return config.print_options['mulsep'].join(self._w).replace('@', 'i')
+                return config.print_options['mulsep']\
+                    .join(self._w).replace('@', 'i')
             else:
                 return "1"
 
@@ -274,13 +267,12 @@ class VariableWord:
 
     def transform(self, old, new, swap=False):
         """
-        For each Variabble factor, change its name to new if it was 
+        For each Variabble factor, change its name to new if it was
         previously equal to old.
 
         Arguments:
             old, new (str or Variable)
         """
-        num_encountered = defaultdict(int)
         if isinstance(old, Variable):
             old = old.name
         if isinstance(new, Variable):
@@ -295,14 +287,13 @@ class VariableWord:
 
     def copy(self):
         """Return a copy of self."""
-        from copy import deepcopy
         return VariableWord(*deepcopy(self._w))
 
     def split_on_sub(self, *subword):
         """
-        Searches for subword in self.  Returns a tuple consisting of the 
-        word before, the subword, and the word after if successful.  If not, 
-        returns None, None, None.  If subword is empty, matches on the intiial 
+        Searches for subword in self.  Returns a tuple consisting of the
+        word before, the subword, and the word after if successful.  If not,
+        returns None, None, None.  If subword is empty, matches on the intiial
         empty subword.
 
         Arguments:
@@ -312,8 +303,10 @@ class VariableWord:
             return [], [], self._w
         else:
             for i in xrange(len(self._w) - len(subword) + 1):
-                if subword[0] == self._w[i] and list(subword) == self._w[i:i+len(subword)]:
-                    return self._w[:i], self._w[i:i+len(subword)], self._w[i+len(subword):]
+                if subword[0] == self._w[i] and \
+                                    list(subword) == self._w[i:i+len(subword)]:
+                    return self._w[:i], self._w[i:i+len(subword)], \
+                        self._w[i+len(subword):]
         return None, None, None
 
     def scale_by_factors(self, scalar_func):
@@ -321,6 +314,7 @@ class VariableWord:
         Return the product of scalar_func(v) for each v in self.
 
         Argument:
-            scalar_func (callable): takes an argument of a str, returns a Number
+            scalar_func (callable): takes an argument of a str, returns
+                a Number
         """
         return prod(*[scalar_func(v) for v in self])

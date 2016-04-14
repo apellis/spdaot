@@ -1,5 +1,4 @@
-"""
-spdaot
+"""spdaot
 
 Overview:
     TODO
@@ -14,8 +13,10 @@ Submodules:
     relation: Relation class for relations among known Variable objects
 """
 
-from .variable import Variable, VariableWord
 from .op import Op
 from .element import Element, make_poly_family, add_central_variable
 from .tools import relation_finder
 
+assert Op  # silence Flake8
+assert Element and make_poly_family and add_central_variable  # silence Flake8
+assert relation_finder  # silene Flake8
